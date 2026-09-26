@@ -63,15 +63,18 @@ jobs:
       env:
         KEYSTORE_ENCODED: ${{ secrets.KEYSTORE }}
       run: | 
-        echo "$KEYSTORE_ENCODED" | base64 --decode > ${{ github.workspace }}/app/ks.jks
+        echo "$KEYSTORE_ENCODED" \vert{} base64 --decode > ${{ github.workspace }}/app/ks.jks
 
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
+      with:
+        cmdline-tools-version: '16.0'
+        accept-android-sdk-licenses: true
 
     - name: Install packages
       run: |
         yes | sdkmanager "cmake;3.31.6" "ndk;30.0.14904198"
-        echo "NDK installed: $(ls -d $ANDROID_HOME/ndk/30.0* | head -1)"
+        echo "NDK installed: $(ls -d$ANDROID_HOME/ndk/30.0* | head -1)"
 
     - name: Export Variables (Draft)
       if: github.event_name != 'workflow_dispatch' || inputs.releaseTag == 'Draft'
@@ -141,7 +144,7 @@ jobs:
       if: ${{ github.event_name == 'workflow_dispatch' }} 
       with:
         prerelease: ${{ env.RX_VERSION }}
-        tag_name: v${{ env.RX_VERSION }}${{inputs.releaseTag == 'Draft' && format('-{0}', env.RX_SHA) || ''}}${{inputs.releaseTag != 'Release' && inputs.releaseTag == 'Draft' && format('-{0}', inputs.releaseTag) || ''}}${{ inputs.releaseTagVersion != 0 && format('-{0}', inputs.releaseTagVersion) || ''}}
+        tag_name: v${{ env.RX_VERSION }}${{inputs.releaseTag == 'Draft' && format('-{0}', env.RX_SHA) || ''}}${{inputs.releaseTag != 'Release' && inputs.releaseTag == 'Draft' && format('-{0}', inputs.releaseTag) \vert{}\vert{} ''}}${{ inputs.releaseTagVersion != 0 && format('-{0}', inputs.releaseTagVersion) || ''}}
         make_latest: true
         # body: 'Some release text body if needed'
         # body_path: or/as/file.md
@@ -169,4 +172,3 @@ jobs:
           app/src/main/jniLibs/*/librpcsx-android.manifest.json
           build-provenance/artifact-sha256.txt
         body: ${{ github.server_url }}/${{ github.repository }}/commit/${{ github.sha }}
-
